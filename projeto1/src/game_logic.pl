@@ -61,6 +61,21 @@ search_circle_island([[X,Y]|T], Visited, Board, Island, F) :-
 search_circle_island([Tile|T], Visited, Board, Island, F) :-
   search_circle_island(T, [Tile|Visited], Board, Island, F).
 
+check_square_island(X, Y, Board, Island) :-
+  search_square_island([[X,Y]], [], Board, [], Island).
+
+search_square_island([], _, _, Island, Island) :- write(Island), nl.
+search_square_island([CurrTile|T], Visited, Board, Island, F) :-
+  member(CurrTile, Visited), !,
+  search_square_island(T, Visited, Board, Island, F).
+search_square_island([[X,Y]|T], Visited, Board, Island, F) :-
+  get_matrix_elem(X, Y, Board, [_|Tile]), (Tile =:= 2 ; Tile =:= 4),
+  neighbours(X, Y, Neighbours),
+  append(T, Neighbours, NS), append(Visited, [[X,Y]], NV), append(Island, [[X,Y]], NI),
+  search_square_island(NS, NV, Board, NI, F).
+search_square_island([Tile|T], Visited, Board, Island, F) :-
+  search_square_island(T, [Tile|Visited], Board, Island, F).
+
 % Utils
 
 neighbours(X, Y, [N, S, E, W]) :-
