@@ -1,6 +1,7 @@
 :- use_module(library(random)).
 :- include('utils.pl').
 :- include('board.pl').
+:- include('game_logic.pl').
 
 syrtis :- start_game.
 
@@ -8,8 +9,6 @@ start_game :- write('Size of board (major/minor)? '), read(X), start_game(X).
 start_game('major') :- gen_major(Board), place_towers(Board).
 start_game('minor') :- write('Minor mode is not supported yet. :('), nl, start_game.
 start_game(X) :- write(X), write(' not a valid command.'), nl, start_game.
-
-% check_if_connected(Board) :-
 
 place_towers(Board) :-
   first_tower(Board, B1),

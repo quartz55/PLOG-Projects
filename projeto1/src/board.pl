@@ -1,5 +1,10 @@
 :- use_module(library(random)).
 
+test_board([
+            [[0,0],[0,1]],
+            [[0,2],[0,0]]
+           ]).
+
 display_board(Board) :-
   write(' '),
   nl, write('    '), display_collums(0), nl,
@@ -36,49 +41,7 @@ display_collums(_).
 
 % ------------------------- End Display
 
-% Check if board is connected
-check_if_connected(Board) :-
-  number_of_tiles(Board, N),
-  check_if_connected(Board, N2),
-  N =:= N2.
-
-check_if_connected(Board, N) :-
-  get_valid_tile(0, 0, X, Y, Board),
-  reachable_tiles(X, Y, Board, Reachable), !,
-  get_list_size(Reachable, N).
-
-reachable_tiles(X, Y, Board, Reachable) :-
-  reachable_tiles_rec([[X,Y]], [], Board, [], Reachable).
-
-reachable_tiles_rec([], _, _, Final, Final).
-reachable_tiles_rec([CurrTile|T], Visited, Board, Reachable, F) :-
-  member(CurrTile, Visited), !,
-  reachable_tiles_rec(T, Visited, Board, Reachable, F).
-reachable_tiles_rec([[X,Y]|T], Visited, Board, Reachable, F) :-
-  get_matrix_elem(X, Y, Board, CurrTile),
-  CurrTile \= [_,0],
-  neighbours(X, Y, Neighbours), append(T, Neighbours, NewCurrTiles), append(Reachable, [[X,Y]], NR),
-  reachable_tiles_rec(NewCurrTiles, [[X,Y]|Visited], Board, NR, F).
-reachable_tiles_rec([CurrTile|T], Visited, Board, Reachable, F) :-
-  reachable_tiles_rec(T, [CurrTile|Visited], Board, Reachable, F).
-
-get_valid_tile(_, _, _, _, []).
-get_valid_tile(X, Y, X1, Y1, [H|T]) :-
-  get_valid_tile_line(X, Y, X1, Y1, H),
-  YN is Y + 1,
-  get_valid_tile(X, YN, X1, Y1, T).
-
-get_valid_tile_line(_, _, _, _, []).
-get_valid_tile_line(X, Y, X1, Y1, [[_,Tile]|_]) :- Tile \= 0, X1 = X, Y1 = Y.
-get_valid_tile_line(X, Y, X1, Y1, [_|T]) :-
-  XN is X + 1,
-  get_valid_tile_line(XN, Y, X1, Y1, T).
-
-neighbours(X, Y, [N, S, E, W]) :-
-  NY is Y - 1, SY is Y + 1, EX is X + 1, WX is X -1,
-  N = [X, NY], S = [X, SY], E = [EX, Y], W = [WX, Y].
-
-% ------------------------- End check connection
+% Board utils
 
 number_of_tiles(Board, N) :-
   number_of_tiles(Board, 0, N).
@@ -97,15 +60,6 @@ number_of_tiles_line([[_,Tile]|T], N) :-
   number_of_tiles_line(T, N1),
   N is N1 + 1.
 
-get_matrix_size([], 0).
-get_matrix_size([_|Xs], Size) :-
-  get_matrix_size(Xs, N),
-  Size is N + 1.
-
-get_list_size([], 0).
-get_list_size([_|T], Size) :-
-  get_list_size(T, N),
-  Size is N + 1.
 
 % Board generation
 
@@ -213,6 +167,11 @@ get_tile(X, Y, Board, Tile) :-
 
 % Matrix manipulation
 
+get_matrix_size([], 0).
+get_matrix_size([_|Xs], Size) :-
+  get_matrix_size(Xs, N),
+  Size is N + 1.
+
 gen_matrix(Elem, Size, Matrix) :-
   gen_matrix(Elem, Size, 0, Matrix).
 
@@ -239,6 +198,11 @@ set_matrix_elem(X, Y, [H|T], Elem, [H|Xs]) :-
 
 % List manipulation
 
+get_list_size([], 0).
+get_list_size([_|T], Size) :-
+  get_list_size(T, N),
+  Size is N + 1.
+
 gen_list(_,0,[]).
 gen_list(Elem,N,[Elem|L]) :-
   N > 0,
@@ -256,8 +220,3 @@ set_list_elem(Pos, [H|T], Elem, [H|Xs]) :-
   Pos > 0,
   Pos1 is Pos - 1,
   set_list_elem(Pos1, T, Elem, Xs).
-
-test_board([
-            [[0,0],[0,1]],
-            [[0,2],[0,0]]
-           ]).
