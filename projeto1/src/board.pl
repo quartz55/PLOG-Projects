@@ -12,7 +12,7 @@ display_board(Board) :-
 
 display_board_aux([X|Xs], N) :-
   N1 is N + 1,
-  write(N1), write(' '),
+  write(N), write(' '),
   display_line(X), nl,
   display_board_aux(Xs, N1).
 display_board_aux([], _).
@@ -39,7 +39,7 @@ display_tower(2) :- write('O').
 display_collums(N) :-
   N < 7,
   N1 is N + 1,
-  write(N1), write('    '),
+  write(N), write('    '),
   display_collums(N1).
 display_collums(_).
 
