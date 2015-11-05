@@ -1,8 +1,8 @@
 :- use_module(library(random)).
 
 test_board([
-            [[0,0],[0,1]],
-            [[0,2],[0,1]]
+            [[0,1],[0,2]],
+            [[0,3],[0,4]]
            ]).
 
 display_board(Board) :-
@@ -48,20 +48,22 @@ display_collums(_).
 % Board utils
 
 number_of_tiles(Board, N) :-
-  number_of_tiles(Board, 0, N).
-number_of_tiles([], Total, Total).
-number_of_tiles([H|T], N, Total) :-
-  number_of_tiles_line(H, Line),
-  N1 is N + Line,
-  number_of_tiles(T, N1, Total).
+  number_of_tiles(Board, _, N).
+number_of_tiles(Board, Tile, N) :-
+  number_of_tiles(Board, Tile, 0, N).
+number_of_tiles([], _, Total, Total).
+number_of_tiles([H|T], Tile, N, Total) :-
+  number_of_tiles_line(H, Tile, NLine),
+  N1 is N + NLine,
+  number_of_tiles(T, Tile, N1, Total).
 
-number_of_tiles_line([], 0).
-number_of_tiles_line([[_,Tile]|T], N) :-
-  Tile == 0,
-  number_of_tiles_line(T, N).
-number_of_tiles_line([[_,Tile]|T], N) :-
-  Tile > 0,
-  number_of_tiles_line(T, N1),
+number_of_tiles_line([], _, 0).
+number_of_tiles_line([Curr|T], Tile, N) :-
+  (\+ Curr \= [_,0] ; Curr \= Tile),
+  number_of_tiles_line(T, Tile, N).
+number_of_tiles_line([Curr|T], Tile, N) :-
+  \+ Curr \= Tile,
+  number_of_tiles_line(T, Tile, N1),
   N is N1 + 1.
 
 

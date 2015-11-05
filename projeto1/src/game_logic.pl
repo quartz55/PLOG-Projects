@@ -1,4 +1,36 @@
-% Check if board is connected
+% -------------- Winning conditions
+
+% Completed islands
+
+completed_island('white', Board) :-
+  get_valid_tile(X, Y, Board, [_,1]), !,
+  check_white_island(X, Y, Board, Island), !,
+  get_list_size(Island, NIsland),
+  number_of_tiles(Board, [_,1], N), number_of_tiles(Board, [_,2], N1), NWhites is N+N1, !,
+  NIsland =:= NWhites.
+
+completed_island('black', Board) :-
+  get_valid_tile(X, Y, Board, [_,4]), !,
+  check_black_island(X, Y, Board, Island), !,
+  get_list_size(Island, NIsland),
+  number_of_tiles(Board, [_,3], N), number_of_tiles(Board, [_,4], N1), NWhites is N+N1, !,
+  NIsland =:= NWhites.
+
+completed_island('round', Board) :-
+  get_valid_tile(X, Y, Board, [_,1]), !,
+  check_round_island(X, Y, Board, Island), !,
+  get_list_size(Island, NIsland),
+  number_of_tiles(Board, [_,1], N), number_of_tiles(Board, [_,3], N1), NWhites is N+N1, !,
+  NIsland =:= NWhites.
+
+completed_island('square', Board) :-
+  get_valid_tile(X, Y, Board, [_,2]), !,
+  check_square_island(X, Y, Board, Island), !,
+  get_list_size(Island, NIsland),
+  number_of_tiles(Board, [_,2], N), number_of_tiles(Board, [_,4], N1), NWhites is N+N1, !,
+  NIsland =:= NWhites.
+
+% -------------- Check if board is connected
 
 check_if_connected(Board) :-
   number_of_tiles(Board, N),
@@ -6,7 +38,7 @@ check_if_connected(Board) :-
   N =:= N2.
 
 check_if_connected(Board, N) :-
-  get_valid_tile(0, 0, X, Y, Board),
+  get_valid_tile(X, Y, Board),
   reachable_tiles(X, Y, Board, Reachable), !,
   get_list_size(Reachable, N).
 
@@ -97,20 +129,26 @@ search_square_island([Tile|T], Visited, Board, Island, F) :-
 
 % --------------------------- End check islands
 
-% Utils
+% ------------------------- Utils
 
 neighbours(X, Y, [N, S, E, W]) :-
   NY is Y - 1, SY is Y + 1, EX is X + 1, WX is X -1,
   N = [X, NY], S = [X, SY], E = [EX, Y], W = [WX, Y].
 
-get_valid_tile(_, _, _, _, []).
-get_valid_tile(X, Y, X1, Y1, [H|T]) :-
-  get_valid_tile_line(X, Y, X1, Y1, H),
-  YN is Y + 1,
-  get_valid_tile(X, YN, X1, Y1, T).
+get_valid_tile(X, Y, Board) :- get_valid_tile(0, 0, X, Y, Board, _).
+get_valid_tile(X, Y, Board, Tile) :- get_valid_tile(0, 0, X, Y, Board, Tile).
 
-get_valid_tile_line(_, _, _, _, []).
-get_valid_tile_line(X, Y, X1, Y1, [[_,Tile]|_]) :- Tile \= 0, X1 = X, Y1 = Y.
-get_valid_tile_line(X, Y, X1, Y1, [_|T]) :-
+get_valid_tile(_, _, _, _, [], _).
+get_valid_tile(X, Y, X1, Y1, [H|T], Tile) :-
+  get_valid_tile_line(X, Y, X1, Y1, H, Tile),
+  YN is Y + 1,
+  get_valid_tile(X, YN, X1, Y1, T, Tile).
+
+get_valid_tile_line(_, _, _, _, [], _).
+get_valid_tile_line(X, Y, X1, Y1, [Curr|_], Tile) :-
+ Curr \= [_,0],
+ \+ Curr \= Tile,
+ X1 = X, Y1 = Y.
+get_valid_tile_line(X, Y, X1, Y1, [_|T], Tile) :-
   XN is X + 1,
-  get_valid_tile_line(XN, Y, X1, Y1, T).
+  get_valid_tile_line(XN, Y, X1, Y1, T, Tile).
