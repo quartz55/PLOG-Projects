@@ -2,7 +2,7 @@
 
 test_board([
             [[0,0],[0,1]],
-            [[0,2],[0,0]]
+            [[0,2],[0,1]]
            ]).
 
 display_board(Board) :-
@@ -22,6 +22,10 @@ display_line([X|Xs]) :-
   display_line(Xs).
 display_line([]).
 
+% (   ) - Round        1/3
+% [   ] - Square       2/4
+%  ###  - White        1/2
+%       - Black        3/4
 display_cell([_,0]) :- write('     ').
 display_cell([T,1]) :- write('(#'), display_tower(T), write('#)').
 display_cell([T,2]) :- write('[#'), display_tower(T), write('#]').
