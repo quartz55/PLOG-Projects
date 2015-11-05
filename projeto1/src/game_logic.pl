@@ -28,8 +28,9 @@ reachable_tiles_rec([CurrTile|T], Visited, Board, Reachable, F) :-
 
 
 
-% Check islands
+% ------------- Check islands
 
+% White
 check_white_island(X, Y, Board, Island) :-
   search_white_island([[X,Y]], [], Board, [], Island).
 
@@ -45,22 +46,40 @@ search_white_island([[X,Y]|T], Visited, Board, Island, F) :-
 search_white_island([Tile|T], Visited, Board, Island, F) :-
   search_white_island(T, [Tile|Visited], Board, Island, F).
 
+% Black
+check_black_island(X, Y, Board, Island) :-
+  search_black_island([[X,Y]], [], Board, [], Island).
 
-check_circle_island(X, Y, Board, Island) :-
-  search_circle_island([[X,Y]], [], Board, [], Island).
-
-search_circle_island([], _, _, Island, Island) :- write(Island), nl.
-search_circle_island([CurrTile|T], Visited, Board, Island, F) :-
+search_black_island([], _, _, Island, Island) :- write(Island), nl.
+search_black_island([CurrTile|T], Visited, Board, Island, F) :-
   member(CurrTile, Visited), !,
-  search_circle_island(T, Visited, Board, Island, F).
-search_circle_island([[X,Y]|T], Visited, Board, Island, F) :-
+  search_black_island(T, Visited, Board, Island, F).
+search_black_island([[X,Y]|T], Visited, Board, Island, F) :-
+  get_matrix_elem(X, Y, Board, [_|Tile]), (Tile =:= 3 ; Tile =:= 4),
+  neighbours(X, Y, Neighbours),
+  append(T, Neighbours, NS), append(Visited, [[X,Y]], NV), append(Island, [[X,Y]], NI),
+  search_black_island(NS, NV, Board, NI, F).
+search_black_island([Tile|T], Visited, Board, Island, F) :-
+  search_black_island(T, [Tile|Visited], Board, Island, F).
+
+
+% Round
+check_round_island(X, Y, Board, Island) :-
+  search_round_island([[X,Y]], [], Board, [], Island).
+
+search_round_island([], _, _, Island, Island) :- write(Island), nl.
+search_round_island([CurrTile|T], Visited, Board, Island, F) :-
+  member(CurrTile, Visited), !,
+  search_round_island(T, Visited, Board, Island, F).
+search_round_island([[X,Y]|T], Visited, Board, Island, F) :-
   get_matrix_elem(X, Y, Board, [_|Tile]), (Tile =:= 1 ; Tile =:= 3),
   neighbours(X, Y, Neighbours),
   append(T, Neighbours, NS), append(Visited, [[X,Y]], NV), append(Island, [[X,Y]], NI),
-  search_circle_island(NS, NV, Board, NI, F).
-search_circle_island([Tile|T], Visited, Board, Island, F) :-
-  search_circle_island(T, [Tile|Visited], Board, Island, F).
+  search_round_island(NS, NV, Board, NI, F).
+search_round_island([Tile|T], Visited, Board, Island, F) :-
+  search_round_island(T, [Tile|Visited], Board, Island, F).
 
+% Square
 check_square_island(X, Y, Board, Island) :-
   search_square_island([[X,Y]], [], Board, [], Island).
 
@@ -75,6 +94,8 @@ search_square_island([[X,Y]|T], Visited, Board, Island, F) :-
   search_square_island(NS, NV, Board, NI, F).
 search_square_island([Tile|T], Visited, Board, Island, F) :-
   search_square_island(T, [Tile|Visited], Board, Island, F).
+
+% --------------------------- End check islands
 
 % Utils
 
