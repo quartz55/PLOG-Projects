@@ -20,6 +20,7 @@ place_towers(Game) :-
   game_setBoard(Game, B4, NewGame),
   game_loop(NewGame).
 
+% Main game loop
 game_loop('quit') :- !, write('Quitting...'),nl.
 game_loop('White') :- write('White won!'),nl.
 game_loop('Black') :- write('Black won!'),nl.
@@ -97,12 +98,13 @@ sinkTileMenu(Game, NewGame) :-
   check_if_connected(NewBoard),
   game_setBoard(Game, NewBoard, G1),
   game_clearPasses(G1, G2),
-  game_nextTurn(G2, NewGame).
+  game_sink(G2, G3),
+  game_nextTurn(G3, G4),
+  game_checkSinks(G4, NewGame).
 sinkTileMenu(Game, Game) :- write('Invalid sink'), nl.
 
 sinkTile(X, Y, Board, NewBoard) :-
   set_tile(X, Y, Board, 0, NewBoard).
-sinkTile(_, _, Board, Board) :- write('Couldnt sink tile'), nl.
 
 % ------------- Move tile
 

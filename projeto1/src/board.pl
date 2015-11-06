@@ -67,6 +67,79 @@ number_of_tiles_line([Curr|T], Tile, N) :-
   N is N1 + 1.
 
 
+% Board manipulation
+
+set_tower(X, Y, Board, Tower, NewBoard) :-
+  get_tile(X, Y, Board, Tile),
+  set_matrix_elem(X, Y, Board, [Tower,Tile], NewBoard).
+
+get_tower(X, Y, Board, Tower) :-
+  get_matrix_elem(X, Y, Board, [Tower,_]).
+
+
+set_tile(X, Y, Board, Tile, NewBoard) :-
+  get_tower(X, Y, Board, Tower),
+  set_matrix_elem(X, Y, Board, [Tower,Tile], NewBoard).
+
+get_tile(X, Y, Board, Tile) :-
+  get_matrix_elem(X, Y, Board, [_,Tile]).
+
+% Matrix manipulation
+
+get_matrix_size([], 0).
+get_matrix_size([_|Xs], Size) :-
+  get_matrix_size(Xs, N),
+  Size is N + 1.
+
+gen_matrix(Elem, Size, Matrix) :-
+  gen_matrix(Elem, Size, 0, Matrix).
+
+gen_matrix(_, Size, Size, []).
+gen_matrix(Elem, Size, N, [List|Xs]) :-
+  N < Size,
+  N1 is N + 1,
+  gen_list(Elem, Size, List),
+  gen_matrix(Elem, Size, N1, Xs).
+
+get_matrix_elem(X, 0, [H|_], Elem) :-
+  get_list_elem(X, H, Elem).
+get_matrix_elem(X, Y, [_|Xs], Elem) :-
+  X >= 0, Y > 0,
+  Y1 is Y - 1,
+  get_matrix_elem(X, Y1, Xs, Elem).
+
+set_matrix_elem(X, 0, [H|T], Elem, [List|T]) :-
+  set_list_elem(X, H, Elem, List).
+set_matrix_elem(X, Y, [H|T], Elem, [H|Xs]) :-
+  X >= 0, Y > 0,
+  Y1 is Y - 1,
+  set_matrix_elem(X, Y1, T, Elem, Xs).
+
+% List manipulation
+
+get_list_size([], 0).
+get_list_size([_|T], Size) :-
+  get_list_size(T, N),
+  Size is N + 1.
+
+gen_list(_,0,[]).
+gen_list(Elem,N,[Elem|L]) :-
+  N > 0,
+  N1 is N - 1,
+  gen_list(Elem,N1,L).
+
+get_list_elem(0, [H|_], H).
+get_list_elem(Pos, [_|T], Elem) :-
+  Pos > 0,
+  Pos1 is Pos - 1,
+  get_list_elem(Pos1, T, Elem).
+
+set_list_elem(0, [_|T], Elem, [Elem|T]).
+set_list_elem(Pos, [H|T], Elem, [H|Xs]) :-
+  Pos > 0,
+  Pos1 is Pos - 1,
+  set_list_elem(Pos1, T, Elem, Xs).
+
 % Board generation
 
 gen_empty_major(Board) :- gen_matrix([0,0], 7, Board).
@@ -145,84 +218,8 @@ gen_major35(Board, NewBoard) :-
   random(1, 4, R),
   set_tile(4, 0, Board, R, B1), place_even_tile(2, 6, R, B1, NewBoard).
 
-place_even_tile(X, Y, 1, Board, NewBoard) :-
-  set_tile(X, Y, Board, 4, NewBoard).
-place_even_tile(X, Y, 2, Board, NewBoard) :-
-  set_tile(X, Y, Board, 3, NewBoard).
-place_even_tile(X, Y, 3, Board, NewBoard) :-
-  set_tile(X, Y, Board, 2, NewBoard).
-place_even_tile(X, Y, 4, Board, NewBoard) :-
-  set_tile(X, Y, Board, 1, NewBoard).
-
-% Board manipulation
-
-set_tower(X, Y, Board, Tower, NewBoard) :-
-  get_tile(X, Y, Board, Tile),
-  set_matrix_elem(X, Y, Board, [Tower,Tile], NewBoard).
-
-get_tower(X, Y, Board, Tower) :-
-  get_matrix_elem(X, Y, Board, [Tower,_]).
-
-
-set_tile(X, Y, Board, Tile, NewBoard) :-
-  get_tower(X, Y, Board, Tower),
-  set_matrix_elem(X, Y, Board, [Tower,Tile], NewBoard).
-
-get_tile(X, Y, Board, Tile) :-
-  get_matrix_elem(X, Y, Board, [_,Tile]).
-
-% Matrix manipulation
-
-get_matrix_size([], 0).
-get_matrix_size([_|Xs], Size) :-
-  get_matrix_size(Xs, N),
-  Size is N + 1.
-
-gen_matrix(Elem, Size, Matrix) :-
-  gen_matrix(Elem, Size, 0, Matrix).
-
-gen_matrix(_, Size, Size, []).
-gen_matrix(Elem, Size, N, [List|Xs]) :-
-  N < Size,
-  N1 is N + 1,
-  gen_list(Elem, Size, List),
-  gen_matrix(Elem, Size, N1, Xs).
-
-get_matrix_elem(X, 0, [H|_], Elem) :-
-  get_list_elem(X, H, Elem).
-get_matrix_elem(X, Y, [_|Xs], Elem) :-
-  X >= 0, Y > 0,
-  Y1 is Y - 1,
-  get_matrix_elem(X, Y1, Xs, Elem).
-
-set_matrix_elem(X, 0, [H|T], Elem, [List|T]) :-
-  set_list_elem(X, H, Elem, List).
-set_matrix_elem(X, Y, [H|T], Elem, [H|Xs]) :-
-  X >= 0, Y > 0,
-  Y1 is Y - 1,
-  set_matrix_elem(X, Y1, T, Elem, Xs).
-
-% List manipulation
-
-get_list_size([], 0).
-get_list_size([_|T], Size) :-
-  get_list_size(T, N),
-  Size is N + 1.
-
-gen_list(_,0,[]).
-gen_list(Elem,N,[Elem|L]) :-
-  N > 0,
-  N1 is N - 1,
-  gen_list(Elem,N1,L).
-
-get_list_elem(0, [H|_], H).
-get_list_elem(Pos, [_|T], Elem) :-
-  Pos > 0,
-  Pos1 is Pos - 1,
-  get_list_elem(Pos1, T, Elem).
-
-set_list_elem(0, [_|T], Elem, [Elem|T]).
-set_list_elem(Pos, [H|T], Elem, [H|Xs]) :-
-  Pos > 0,
-  Pos1 is Pos - 1,
-  set_list_elem(Pos1, T, Elem, Xs).
+place_even_tile(X, Y, 0, Board, NewBoard) :- set_tile(X, Y, Board, 0, NewBoard).
+place_even_tile(X, Y, 1, Board, NewBoard) :- set_tile(X, Y, Board, 4, NewBoard).
+place_even_tile(X, Y, 2, Board, NewBoard) :- set_tile(X, Y, Board, 3, NewBoard).
+place_even_tile(X, Y, 3, Board, NewBoard) :- set_tile(X, Y, Board, 2, NewBoard).
+place_even_tile(X, Y, 4, Board, NewBoard) :- set_tile(X, Y, Board, 1, NewBoard).
