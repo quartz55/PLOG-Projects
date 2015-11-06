@@ -95,7 +95,8 @@ game_checkSinks([_,_,[W,B]|_], NewGame) :-
     WS >= 4 -> NewGame = 'White';
     BS >= 4 -> NewGame = 'Black';
     fail
-  ).
+  ),
+  assert(win_reason('Quicksand')).
 game_checkSinks(Game, Game).
 
 % Utils
