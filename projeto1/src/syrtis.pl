@@ -36,21 +36,40 @@ place_towers(Game) :-
   game_loop(NewGame).
 
 % Main game loop
-game_loop(Game, 'White') :- game_showBoard(Game), write('White won!'),nl, writeWinReason.
-game_loop(Game, 'Black') :- game_showBoard(Game), write('Black won!'),nl, writeWinReason.
-game_loop('quit') :- write('Quitting...'), nl.
-game_loop(Game) :- % Check for completed islands
+
+game_end('White') :-  write('White won!'),nl, writeWinReason.
+game_end('Black') :-  write('Black won!'),nl, writeWinReason.
+game_end('quit') :- write('Quitting...'), nl.
+
+check_game_end('quit') :- game_end('quit').
+check_game_end(Game) :-
+  check_completed_islands(Game, Winner),
+  game_showBoard(Game),
+  game_end(Winner).
+check_game_end(Game) :-
+  game_checkSinks(Game, Winner),
+  game_showBoard(Game),
+  game_end(Winner).
+check_game_end(Game) :-
+  game_checkPasses(Game, Winner),
+  game_showBoard(Game),
+  game_end(Winner).
+
+check_completed_islands(Game, Winner) :-
   game_getBoard(Game, Board),
   (
     ((completed_island('white', Board) ; completed_island('round', Board)) ,
       (completed_island('black', Board) ; completed_island('square', Board)))
-    -> (game_checkInitiative(Game, Winner), game_loop(Game, Winner));
+    -> game_checkInitiative(Game, Winner);
     (completed_island('white', Board) ; completed_island('round', Board))
-  -> (assert(win_reason('Completed island')), game_loop(Game, 'White'));
+  -> (assert(win_reason('Completed island')), Winner = 'White');
     (completed_island('black', Board) ; completed_island('square', Board))
-  -> (assert(win_reason('Completed island')), game_loop(Game, 'Black'));
+  -> (assert(win_reason('Completed island')), Winner = 'Black');
     fail
   ).
+
+game_loop(Game) :-
+  check_game_end(Game).
 game_loop(Game) :-
   clearScreen,
   showGameInfo(Game),
@@ -64,13 +83,9 @@ game_loop(Game) :-
 
     nl,
     write('ERROR: Invalid option.'), nl,
-    game_loop(Game)
+    NewGame = Game
   ),
-  (
-    NewGame = 'White' -> game_loop(Game, NewGame);
-    NewGame = 'Black' -> game_loop(Game, NewGame);
-    game_loop(NewGame)
-  ).
+  game_loop(NewGame).
 
 gameMenu(Option):-
   write('1. Move tower'), nl,
@@ -124,8 +139,7 @@ sinkTileMenu(Game, NewGame) :-
   game_setBoard(Game, NewBoard, G1),
   game_clearPasses(G1, G2),
   game_sink(G2, G3),
-  game_nextTurn(G3, G4),
-  game_checkSinks(G4, NewGame).
+  game_nextTurn(G3, NewGame).
 sinkTileMenu(Game, Game) :- write('ERROR: Invalid sink'), nl.
 
 sinkTile(X, Y, Board, NewBoard) :-
@@ -153,8 +167,7 @@ slideTile(X, Y, X2, Y2, Board, NewBoard) :-
 % ------------- Pass
 
 pass(Game, NewGame) :-
-  game_pass(Game, G1),
-  game_checkPasses(G1, NewGame).
+  game_pass(Game, NewGame).
 
 % Utils
 

@@ -49,19 +49,18 @@ game_clearPasses(Game, 'black', NewGame):-
 
 % -- Initiative win (for passes)
 
-game_checkPasses([_,_,[W,B]|_], NewGame) :- % Both players pass
+game_checkPasses([_,_,[W,B]|_], Winner) :- % Both players pass
   player_getPasses(W, WP), player_getPasses(B, BP),
   WP > 0, BP > 0,
-  game_checkInitiative(W, B, NewGame).
-game_checkPasses([_,_,[W,B]|_], NewGame) :- % Player passes 4 times in a row
+  game_checkInitiative(W, B, Winner).
+game_checkPasses([_,_,[W,B]|_], Winner) :- % Player passes 4 times in a row
   player_getPasses(W, WP), player_getPasses(B, BP),
   (
-    WP >= 4 -> NewGame = 'Black';
-    BP >= 4 -> NewGame = 'White';
+    WP >= 4 -> Winner = 'Black';
+    BP >= 4 -> Winner = 'White';
     fail
   ),
   assert(win_reason('4 passes in a row')).
-game_checkPasses(Game, Game).
 
 game_checkInitiative([_,_,[W,B]|_], Winner) :- game_checkInitiative(W, B, Winner).
 game_checkInitiative(W, B, Winner) :-
@@ -89,15 +88,14 @@ game_sink(Game, 'black', NewGame) :-
   game_blackSink(Game, NewGame).
 
 % -- Quicksand win
-game_checkSinks([_,_,[W,B]|_], NewGame) :-
-  player_getSinks(W, WS), player_getSinks(B, BS),
+game_checkSinks([_,_,[W,B]|_], Winner) :-
+  player_getSinks(W, WS), player_getSinks(B, BS), !,
   (
-    WS >= 4 -> NewGame = 'White';
-    BS >= 4 -> NewGame = 'Black';
+    WS >= 4 -> Winner = 'White';
+    BS >= 4 -> Winner = 'Black';
     fail
   ),
   assert(win_reason('Quicksand')).
-game_checkSinks(Game, Game).
 
 % Utils
 game_printPlayers([_,_,[W,B]|_]) :-
