@@ -7,10 +7,22 @@
 syrtis :- start_game.
 
 start_game :- write('Size of board (major/minor)? '), read(X), start_game(X).
-start_game('major') :- createPvPgame(Game, 'major'), place_towers(Game).
+start_game('major') :- confirmBoard(Game, 'major'), place_towers(Game).
 start_game('minor') :- write('Minor mode is not supported yet. :('), nl, start_game.
-start_game(X) :- write(X), write(' not a valid command.'), nl, start_game.
+start_game(X) :- write(X), write(' not a valid option'), nl, start_game.
 
+confirmBoard(Game, Mode) :-
+  createPvPgame(Temp, Mode),
+  game_showBoard(Temp),
+  write('Start game with this board? (y/n)'),
+  read(Answer),
+  (
+    Answer = 'y' -> Game = Temp;
+    Answer = 'n' -> confirmBoard(Game, Mode);
+    nl,
+    write('Error: Invalid option'), nl,
+    confirmBoard(Game, Mode)
+  ).
 place_towers(Game) :-
   game_getBoard(Game, Board),
   first_tower(Board, B1),
@@ -21,23 +33,27 @@ place_towers(Game) :-
   game_loop(NewGame).
 
 % Main game loop
-game_loop('quit') :- !, write('Quitting...'),nl.
-game_loop('White') :- write('White won!'),nl.
-game_loop('Black') :- write('Black won!'),nl.
+game_loop(Game, 'White') :- game_showBoard(Game), write('White won!'),nl.
+game_loop(Game, 'Black') :- game_showBoard(Game), write('Black won!'),nl.
+game_loop('quit') :- write('Quitting...'), nl.
+game_loop(Game) :- % Check for completed islands
+  game_getBoard(Game, Board),
+  completed_island(Which, Board),
+  (
+    (Which = 'white' ; Which = 'round') -> game_loop(Game, 'White');
+    (Which = 'black' ; Which = 'square') -> game_loop(Game, 'Black');
+    fail
+  ).
 game_loop(Game) :-
-  game_showBoard(Game),
-  game_printPlayers(Game),
-  game_getTurn(Game, Turn),
-  write('--------------------------'), nl,
-  write('It is '), write(Turn), write('\'s turn'), nl,
-  write('--------------------------'), nl,
+  clearScreen,
+  showGameInfo(Game),
   gameMenu(Option),
   (
     Option = 1 -> moveTowerMenu(Game, NewGame);
     Option = 2 -> sinkTileMenu(Game, NewGame);
-    Option = 3 -> moveTileMenu(Game, NewGame);
+    Option = 3 -> slideTileMenu(Game, NewGame);
     Option = 4 -> pass(Game, NewGame);
-    Option = 5 -> game_loop('quit');
+    Option = 5 -> NewGame = 'quit';
 
     nl,
     write('Error: invalid option.'), nl,
@@ -48,11 +64,10 @@ game_loop(Game) :-
 gameMenu(Option):-
   write('1. Move tower'), nl,
   write('2. Sink tile'), nl,
-  write('3. Move tile'), nl,
+  write('3. Slide tile'), nl,
   write('4. Pass'), nl,
   write('5. Quit'), nl,
-  write('> '),
-  read(Option).
+  write('> '), read(Option).
 
 % ------------- Move tower
 
@@ -77,7 +92,6 @@ moveTower(_,_,_,_,_,Board,Board) :- write('Couldnt move tower'), nl.
 
 % ------------- Sink tile
 
-% sinkTileMenu(Game, Game) :- write('Not implemented yet.'), nl.
 sinkTileMenu(Game, NewGame) :-
   selectTower(X, Y, 'Which tower you want to sink from?', Game, _, Board),
   write('Which tile you want to sink? (up/down/left/right)'), nl, read(Which),
@@ -108,8 +122,22 @@ sinkTile(X, Y, Board, NewBoard) :-
 
 % ------------- Move tile
 
-moveTileMenu(Game, Game) :- write('Not implemented yet.'), nl.
+slideTileMenu(Game, NewGame) :-
+  selectTower(X, Y, 'Which tower you want to move from?', Game, _, Board),
+  write('Where do you want to move the tile to?'), nl,
+  get_coords(X2, Y2),
+  get_tile(X2, Y2, Board, Tile), Tile =:= 0,
+  slideTile(X, Y, X2, Y2, Board, NewBoard),
+  check_if_connected(NewBoard),
+  game_setBoard(Game, NewBoard, G1),
+  game_clearPasses(G1, G2),
+  game_nextTurn(G2, NewGame).
+slideTileMenu(Game, Game) :- write('Invalid move'), nl.
 
+slideTile(X, Y, X2, Y2, Board, NewBoard) :-
+  get_tower(X, Y, Board, Tower), get_tile(X, Y, Board, Tile),
+  set_tower(X, Y, Board, 0, B1), set_tile(X, Y, B1, 0, B2),
+  set_tower(X2, Y2, B2, Tower, B3), set_tile(X2, Y2, B3, Tile, NewBoard).
 % ------------- Pass
 
 pass(Game, NewGame) :-
@@ -117,6 +145,14 @@ pass(Game, NewGame) :-
   game_checkPasses(G1, NewGame).
 
 % Utils
+
+showGameInfo(Game) :-
+  game_showBoard(Game),
+  game_printPlayers(Game),
+  game_getTurn(Game, Turn),
+  write('--------------------------'), nl,
+  write('It is '), write(Turn), write('\'s turn'), nl,
+  write('--------------------------'), nl.
 
 selectTower(X, Y, Message, Game, Turn, Board) :-
   game_getTurn(Game, T),
@@ -186,3 +222,5 @@ check_if_valid_black_tile(X, Y, Board) :-
 check_if_valid_white_tile(X, Y, Board) :-
   get_tile(X, Y, Board, Tile),
   (Tile =:= 1 ; Tile =:= 2 ; Tile =:= 3).
+
+load :- consult('syrtis.pl').

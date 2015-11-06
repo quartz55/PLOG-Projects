@@ -6,8 +6,8 @@ test_board([
            ]).
 
 display_board(Board) :-
-  write(' '),
-  nl, write('    '), display_collums(0), nl,
+  write(' '), nl,
+  write('    '), display_collums(0), nl,
   display_board_aux(Board, 0).
 
 display_board_aux([X|Xs], N) :-
@@ -36,12 +36,11 @@ display_tower(0) :- write(' ').
 display_tower(1) :- write('I').
 display_tower(2) :- write('O').
 
+display_collums(7).
 display_collums(N) :-
-  N < 7,
-  N1 is N + 1,
   write(N), write('    '),
+  N1 is N + 1,
   display_collums(N1).
-display_collums(_).
 
 % ------------------------- End Display
 
