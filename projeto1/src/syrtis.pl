@@ -102,20 +102,23 @@ moveTowerMenu(Game, NewGame) :-
   selectTower(X, Y, 'Which tower you want to move?', Game, T, Board),
   write('Where do you want to move the tower to?'), nl,
   get_coords(X2, Y2),
-  get_tower(X2, Y2, Board, Dest), Dest =:= 0,
-  getCurrIsland(X, Y, T, Board, CurrIsland),
-  member([X2,Y2], CurrIsland),
+  isValidMove([X,Y], [X2,Y2], Board, T),
   moveTower(X,Y,X2,Y2,T,Board,NewBoard),
   game_setBoard(Game, NewBoard, G1),
   game_clearPasses(G1, G2),
   game_nextTurn(G2, NewGame).
 moveTowerMenu(Game, Game) :- write('ERROR: Invalid move'), nl.
 
-
 moveTower(X,Y,X2,Y2,Tower,Board,NewBoard) :-
   set_tower(X,Y,Board,0,N),
   set_tower(X2,Y2,N,Tower,NewBoard).
 moveTower(_,_,_,_,_,Board,Board) :- write('Couldnt move tower'), nl.
+
+isValidMove([X,Y], [X2,Y2], Board, Tower) :-
+  get_tower(X2, Y2, Board, Dest), Dest =:= 0,
+  getCurrIsland(X, Y, Tower, Board, CurrIsland),
+  member([X2,Y2], CurrIsland).
+
 
 % ------------- Sink tile
 
@@ -132,11 +135,8 @@ sinkTileMenu(Game, NewGame) :-
     write('ERROR: Invalid direction'), nl,
     sinkTileMenu(Game, NewGame)
   ),
-  get_tower(XT, YT, Board, Tower), Tower =:= 0, % Not occupied
-  checkFreeEdges([XT,YT], Board, N),
-  N < 4,
+  isValidSink(XT, YT, Board),
   sinkTile(XT, YT, Board, NewBoard),
-  check_if_connected(NewBoard),
   game_setBoard(Game, NewBoard, G1),
   game_clearPasses(G1, G2),
   game_sink(G2, G3),
@@ -146,16 +146,21 @@ sinkTileMenu(Game, Game) :- write('ERROR: Invalid sink'), nl.
 sinkTile(X, Y, Board, NewBoard) :-
   set_tile(X, Y, Board, 0, NewBoard).
 
+isValidSink(X, Y, Board) :-
+  get_tower(X, Y, Board, Tower), Tower =:= 0, % Not occupied
+  checkFreeEdges([X,Y], Board, N),
+  N < 4,
+  sinkTile(X, Y, Board, NewBoard),
+  check_if_connected(NewBoard).
+
 % ------------- Move tile
 
 slideTileMenu(Game, NewGame) :-
   selectTower(X, Y, 'Which tower you want to move from?', Game, _, Board),
   write('Where do you want to move the tile to?'), nl,
   get_coords(X2, Y2),
-  get_tile(X2, Y2, Board, Tile), Tile =:= 0,
-  checkSlidingPath([X,Y], [X2,Y2], Board),
+  isValidSlide([X,Y], [X2,Y2], Board),
   slideTile(X, Y, X2, Y2, Board, NewBoard),
-  check_if_connected(NewBoard),
   game_setBoard(Game, NewBoard, G1),
   game_clearPasses(G1, G2),
   game_nextTurn(G2, NewGame).
@@ -165,6 +170,13 @@ slideTile(X, Y, X2, Y2, Board, NewBoard) :-
   get_tower(X, Y, Board, Tower), get_tile(X, Y, Board, Tile),
   set_tower(X, Y, Board, 0, B1), set_tile(X, Y, B1, 0, B2),
   set_tower(X2, Y2, B2, Tower, B3), set_tile(X2, Y2, B3, Tile, NewBoard).
+
+isValidSlide([X,Y], [X2,Y2], Board) :-
+  get_tile(X2, Y2, Board, Tile), Tile =:= 0,
+  checkSlidingPath([X,Y], [X2,Y2], Board),
+  slideTile(X, Y, X2, Y2, Board, NewBoard),
+  check_if_connected(NewBoard).
+
 % ------------- Pass
 
 pass(Game, NewGame) :-
