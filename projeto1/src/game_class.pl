@@ -4,6 +4,10 @@ createPvPgame(Game, 'major') :-
   createMajorBoard(Board),
   createPlayer(Player1, 'white'), createPlayer(Player2, 'black'),
   Game = [Board, 'major', [Player1, Player2], 'white'].
+createPvPgame(Game, 'minor') :-
+  createMinorBoard(Board),
+  createPlayer(Player1, 'white'), createPlayer(Player2, 'black'),
+  Game = [Board, 'major', [Player1, Player2], 'white'].
 
 % Gets
 game_getBoard([Board|_], Board).
@@ -48,12 +52,7 @@ game_clearPasses(Game, 'black', NewGame):-
 game_checkPasses([_,_,[W,B]|_], NewGame) :- % Both players pass
   player_getPasses(W, WP), player_getPasses(B, BP),
   WP > 0, BP > 0,
-  player_getSinks(W, WS), player_getSinks(B, BS),
-  (
-    WS > BS -> NewGame = 'White';
-    BS > WS -> NewGame = 'Black';
-    NewGame = 'White'
-  ).
+  game_checkInitiative(W, B, NewGame).
 game_checkPasses([_,_,[W,B]|_], NewGame) :- % Player passes 4 times in a row
   player_getPasses(W, WP), player_getPasses(B, BP),
   (
@@ -62,6 +61,15 @@ game_checkPasses([_,_,[W,B]|_], NewGame) :- % Player passes 4 times in a row
     fail
   ).
 game_checkPasses(Game, Game).
+
+game_checkInitiative(W, B, Winner) :-
+  player_getSinks(W, WS), player_getSinks(B, BS),
+  (
+    WS > BS -> Winner = 'White';
+    BS > WS -> Winner = 'Black';
+    Winner = 'White'
+  ).
+
 
 % Sink
 game_whiteSink([Board, Mode, [WhitePlayer,BlackPlayer], Turn], [Board, Mode, NewPlayers, Turn]) :-
@@ -131,4 +139,12 @@ createMajorBoard(Board) :-
   createMajorBoard(Board).
 createMajorBoard(Board) :-
   gen_major(Temp),
+  Board = Temp.
+
+createMinorBoard(Board) :-
+  gen_minor(Temp),
+  completed_island(Temp),
+  createMinorBoard(Board).
+createMinorBoard(Board) :-
+  gen_minor(Temp),
   Board = Temp.

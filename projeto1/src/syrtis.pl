@@ -8,7 +8,7 @@ syrtis :- start_game.
 
 start_game :- write('Size of board (major/minor)? '), read(X), start_game(X).
 start_game('major') :- confirmBoard(Game, 'major'), place_towers(Game).
-start_game('minor') :- write('Minor mode is not supported yet. :('), nl, start_game.
+start_game('minor') :- confirmBoard(Game, 'minor'), place_towers(Game).
 start_game(X) :- write(X), write(' not a valid option'), nl, start_game.
 
 confirmBoard(Game, Mode) :-
@@ -20,7 +20,7 @@ confirmBoard(Game, Mode) :-
     Answer = 'y' -> Game = Temp;
     Answer = 'n' -> confirmBoard(Game, Mode);
     nl,
-    write('Error: Invalid option'), nl,
+    write('ERROR: Invalid option'), nl,
     confirmBoard(Game, Mode)
   ).
 place_towers(Game) :-
@@ -38,10 +38,18 @@ game_loop(Game, 'Black') :- game_showBoard(Game), write('Black won!'),nl.
 game_loop('quit') :- write('Quitting...'), nl.
 game_loop(Game) :- % Check for completed islands
   game_getBoard(Game, Board),
-  completed_island(Which, Board),
   (
-    (Which = 'white' ; Which = 'round') -> game_loop(Game, 'White');
-    (Which = 'black' ; Which = 'square') -> game_loop(Game, 'Black');
+    (completed_island('white', Board) ; completed_island('round', Board))
+  -> WhiteWinner = 'True';
+    (completed_island('black', Board) ; completed_island('square', Board))
+  -> BlackWinner = 'True';
+    fail
+  ),
+  (
+    (WhiteWinner = 'True' , BlackWinner = 'True')
+  -> (game_checkInitiative(Game, Winner), game_loop(Game, Winner));
+    WhiteWinner = 'True' -> game_loop(Game, 'White');
+    BlackWinner = 'True' -> game_loop(Game, 'Black');
     fail
   ).
 game_loop(Game) :-
@@ -56,10 +64,14 @@ game_loop(Game) :-
     Option = 5 -> NewGame = 'quit';
 
     nl,
-    write('Error: invalid option.'), nl,
+    write('ERROR: Invalid option.'), nl,
     game_loop(Game)
   ),
-  game_loop(NewGame).
+  (
+    NewGame = 'White' -> game_loop(Game, NewGame);
+    NewGame = 'Black' -> game_loop(Game, NewGame);
+    game_loop(NewGame)
+  ).
 
 gameMenu(Option):-
   write('1. Move tower'), nl,
@@ -82,7 +94,7 @@ moveTowerMenu(Game, NewGame) :-
   game_setBoard(Game, NewBoard, G1),
   game_clearPasses(G1, G2),
   game_nextTurn(G2, NewGame).
-moveTowerMenu(Game, Game) :- write('Invalid move'), nl.
+moveTowerMenu(Game, Game) :- write('ERROR: Invalid move'), nl.
 
 
 moveTower(X,Y,X2,Y2,Tower,Board,NewBoard) :-
@@ -102,7 +114,7 @@ sinkTileMenu(Game, NewGame) :-
     Which == 'right' -> (XT is X + 1, YT is Y);
 
     nl,
-    write('Error: Invalid direction'), nl,
+    write('ERROR: Invalid direction'), nl,
     sinkTileMenu(Game, NewGame)
   ),
   get_tower(XT, YT, Board, Tower), Tower =:= 0, % Not occupied
@@ -115,7 +127,7 @@ sinkTileMenu(Game, NewGame) :-
   game_sink(G2, G3),
   game_nextTurn(G3, G4),
   game_checkSinks(G4, NewGame).
-sinkTileMenu(Game, Game) :- write('Invalid sink'), nl.
+sinkTileMenu(Game, Game) :- write('ERROR: Invalid sink'), nl.
 
 sinkTile(X, Y, Board, NewBoard) :-
   set_tile(X, Y, Board, 0, NewBoard).
@@ -127,12 +139,13 @@ slideTileMenu(Game, NewGame) :-
   write('Where do you want to move the tile to?'), nl,
   get_coords(X2, Y2),
   get_tile(X2, Y2, Board, Tile), Tile =:= 0,
+  checkSlidingPath([X,Y], [X2,Y2], Board),
   slideTile(X, Y, X2, Y2, Board, NewBoard),
   check_if_connected(NewBoard),
   game_setBoard(Game, NewBoard, G1),
   game_clearPasses(G1, G2),
   game_nextTurn(G2, NewGame).
-slideTileMenu(Game, Game) :- write('Invalid move'), nl.
+slideTileMenu(Game, Game) :- write('ERROR: Invalid slide'), nl.
 
 slideTile(X, Y, X2, Y2, Board, NewBoard) :-
   get_tower(X, Y, Board, Tower), get_tile(X, Y, Board, Tile),

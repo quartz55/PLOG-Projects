@@ -1,13 +1,18 @@
 :- use_module(library(random)).
 
 test_board([
-            [[0,1],[0,2]],
-            [[0,3],[0,4]]
+            [[0,0],[0,3],[0,0],[0,0],[0,0],[0,0],[0,0]],
+            [[0,2],[0,2],[0,0],[0,0],[0,0],[0,0],[0,0]],
+            [[0,1],[0,3],[0,2],[0,0],[0,0],[0,0],[0,0]],
+            [[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],
+            [[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],
+            [[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],
+            [[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]]
            ]).
 
 display_board(Board) :-
   write(' '), nl,
-  write('    '), display_collums(0), nl,
+  write('    '), display_collums(0, Board), nl,
   display_board_aux(Board, 0).
 
 display_board_aux([X|Xs], N) :-
@@ -36,11 +41,11 @@ display_tower(0) :- write(' ').
 display_tower(1) :- write('I').
 display_tower(2) :- write('O').
 
-display_collums(7).
-display_collums(N) :-
+display_collums(N, B) :- get_matrix_size(B, N1), N >= N1.
+display_collums(N, B) :-
   write(N), write('    '),
   N1 is N + 1,
-  display_collums(N1).
+  display_collums(N1, B).
 
 % ------------------------- End Display
 
@@ -116,6 +121,9 @@ set_matrix_elem(X, Y, [H|T], Elem, [H|Xs]) :-
 
 % List manipulation
 
+get_list_last([H|[]], H).
+get_list_last([_|T], H) :- get_list_last(T, H).
+
 get_list_size([], 0).
 get_list_size([_|T], Size) :-
   get_list_size(T, N),
@@ -129,7 +137,6 @@ gen_list(Elem,N,[Elem|L]) :-
 
 get_list_elem(0, [H|_], H).
 get_list_elem(Pos, [_|T], Elem) :-
-  Pos > 0,
   Pos1 is Pos - 1,
   get_list_elem(Pos1, T, Elem).
 
@@ -142,8 +149,10 @@ set_list_elem(Pos, [H|T], Elem, [H|Xs]) :-
 % Board generation
 
 gen_empty_major(Board) :- gen_matrix([0,0], 7, Board).
+gen_empty_minor(Board) :- gen_matrix([0,0], 5, Board).
 
 gen_major(Board) :- gen_empty_major(B1), gen_major1(B1, Board).
+gen_minor(Board) :- gen_empty_minor(B1), gen_minor1(B1, Board).
 
 gen_major1(Board, NewBoard) :-
   random(1, 4, R),
@@ -216,6 +225,39 @@ gen_major33(Board, NewBoard) :-
 gen_major35(Board, NewBoard) :-
   random(1, 4, R),
   set_tile(4, 0, Board, R, B1), place_even_tile(2, 6, R, B1, NewBoard).
+
+% Minor
+gen_minor1(Board, NewBoard) :-
+  random(1, 4, R),
+  set_tile(1, 2, Board, R, B1), place_even_tile(3, 2, R, B1, B2),
+  gen_minor3(B2, NewBoard).
+gen_minor3(Board, NewBoard) :-
+  random(1, 4, R),
+  set_tile(0, 2, Board, R, B1), place_even_tile(4, 2, R, B1, B2),
+  gen_minor5(B2, NewBoard).
+gen_minor5(Board, NewBoard) :-
+  random(1, 4, R),
+  set_tile(0, 1, Board, R, B1), place_even_tile(4, 3, R, B1, B2),
+  gen_minor7(B2, NewBoard).
+gen_minor7(Board, NewBoard) :-
+  random(1, 4, R),
+  set_tile(1, 1, Board, R, B1), place_even_tile(3, 3, R, B1, B2),
+  gen_minor9(B2, NewBoard).
+gen_minor9(Board, NewBoard) :-
+  random(1, 4, R),
+  set_tile(2, 1, Board, R, B1), place_even_tile(2, 3, R, B1, B2),
+  gen_minor11(B2, NewBoard).
+gen_minor11(Board, NewBoard) :-
+  random(1, 4, R),
+  set_tile(3, 1, Board, R, B1), place_even_tile(1, 3, R, B1, B2),
+  gen_minor13(B2, NewBoard).
+gen_minor13(Board, NewBoard) :-
+  random(1, 4, R),
+  set_tile(3, 0, Board, R, B1), place_even_tile(1, 4, R, B1, B2),
+  gen_minor15(B2, NewBoard).
+gen_minor15(Board, NewBoard) :-
+  random(1, 4, R),
+  set_tile(2, 0, Board, R, B1), place_even_tile(2, 4, R, B1, NewBoard).
 
 place_even_tile(X, Y, 0, Board, NewBoard) :- set_tile(X, Y, Board, 0, NewBoard).
 place_even_tile(X, Y, 1, Board, NewBoard) :- set_tile(X, Y, Board, 4, NewBoard).
