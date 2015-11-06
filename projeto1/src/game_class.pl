@@ -59,16 +59,19 @@ game_checkPasses([_,_,[W,B]|_], NewGame) :- % Player passes 4 times in a row
     WP >= 4 -> NewGame = 'Black';
     BP >= 4 -> NewGame = 'White';
     fail
-  ).
+  ),
+  assert(win_reason('4 passes in a row')).
 game_checkPasses(Game, Game).
 
+game_checkInitiative([_,_,[W,B]|_], Winner) :- game_checkInitiative(W, B, Winner).
 game_checkInitiative(W, B, Winner) :-
   player_getSinks(W, WS), player_getSinks(B, BS),
   (
     WS > BS -> Winner = 'White';
     BS > WS -> Winner = 'Black';
     Winner = 'White'
-  ).
+  ),
+  assert(win_reason('Initiative')).
 
 
 % Sink
@@ -134,17 +137,13 @@ player_print([Type, Color, Passes, Sinks]) :-
 
 % Misc
 createMajorBoard(Board) :-
-  gen_major(Temp),
-  completed_island(Temp),
-  createMajorBoard(Board).
-createMajorBoard(Board) :-
-  gen_major(Temp),
+  gen_major(Temp), !,
+  \+ completed_island(Temp),
   Board = Temp.
+createMajorBoard(B) :- createMajorBoard(B).
 
 createMinorBoard(Board) :-
-  gen_minor(Temp),
-  completed_island(Temp),
-  createMinorBoard(Board).
-createMinorBoard(Board) :-
-  gen_minor(Temp),
+  gen_minor(Temp), !,
+  \+ completed_island(Temp),
   Board = Temp.
+createMinorBoard(B) :- createMinorBoard(B).

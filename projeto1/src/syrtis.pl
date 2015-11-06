@@ -3,6 +3,9 @@
 :- include('board.pl').
 :- include('game_logic.pl').
 :- include('game_class.pl').
+:- include('computer.pl').
+
+:- dynamic win_reason/1.
 
 syrtis :- start_game.
 
@@ -33,23 +36,19 @@ place_towers(Game) :-
   game_loop(NewGame).
 
 % Main game loop
-game_loop(Game, 'White') :- game_showBoard(Game), write('White won!'),nl.
-game_loop(Game, 'Black') :- game_showBoard(Game), write('Black won!'),nl.
+game_loop(Game, 'White') :- game_showBoard(Game), write('White won!'),nl, writeWinReason.
+game_loop(Game, 'Black') :- game_showBoard(Game), write('Black won!'),nl, writeWinReason.
 game_loop('quit') :- write('Quitting...'), nl.
 game_loop(Game) :- % Check for completed islands
   game_getBoard(Game, Board),
   (
+    ((completed_island('white', Board) ; completed_island('round', Board)) ,
+      (completed_island('black', Board) ; completed_island('square', Board)))
+    -> (game_checkInitiative(Game, Winner), game_loop(Game, Winner));
     (completed_island('white', Board) ; completed_island('round', Board))
-  -> WhiteWinner = 'True';
+  -> (assert(win_reason('Completed island')), game_loop(Game, 'White'));
     (completed_island('black', Board) ; completed_island('square', Board))
-  -> BlackWinner = 'True';
-    fail
-  ),
-  (
-    (WhiteWinner = 'True' , BlackWinner = 'True')
-  -> (game_checkInitiative(Game, Winner), game_loop(Game, Winner));
-    WhiteWinner = 'True' -> game_loop(Game, 'White');
-    BlackWinner = 'True' -> game_loop(Game, 'Black');
+  -> (assert(win_reason('Completed island')), game_loop(Game, 'Black'));
     fail
   ).
 game_loop(Game) :-
@@ -158,6 +157,9 @@ pass(Game, NewGame) :-
   game_checkPasses(G1, NewGame).
 
 % Utils
+
+writeWinReason :-
+  win_reason(X), write(X), nl.
 
 showGameInfo(Game) :-
   game_showBoard(Game),
