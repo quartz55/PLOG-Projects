@@ -39,7 +39,7 @@ completed_island('square', Board) :-
 
 check_if_connected(Board) :-
   number_of_tiles(Board, N),
-  check_if_connected(Board, N2),
+  check_if_connected(Board, N2), !,
   N =:= N2.
 
 check_if_connected(Board, N) :-
@@ -135,6 +135,19 @@ search_square_island([Tile|T], Visited, Board, Island, F) :-
 % --------------------------- End check islands
 
 % ------------------------- Utils
+
+checkFreeEdges([X,Y], Board, N) :-
+  neighbours(X, Y, Neighbours),
+  checkFreeEdges(Neighbours, Board, [], ValidTiles),
+  get_list_size(ValidTiles, N).
+
+checkFreeEdges([], _, Final, Final).
+checkFreeEdges([[X,Y]|T], Board, Valid, F) :-
+  get_tile(X,Y,Board,Tile),
+  Tile \= 0,
+  checkFreeEdges(T, Board, [[X,Y]|Valid], F).
+checkFreeEdges([_|T], Board, Valid, F) :- checkFreeEdges(T, Board, Valid, F).
+
 
 neighbours(X, Y, [N, S, E, W]) :-
   NY is Y - 1, SY is Y + 1, EX is X + 1, WX is X -1,

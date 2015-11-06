@@ -56,15 +56,7 @@ gameMenu(Option):-
 % ------------- Move tower
 
 moveTowerMenu(Game, NewGame) :-
-  game_getTurn(Game, Turn),
-  (
-    Turn = 'white' -> T = 2;
-    Turn = 'black' -> T = 1
-    ),
-  game_getBoard(Game, Board),
-  write('Which tower you want to move?'), nl,
-  get_coords(X, Y),
-  get_tower(X, Y, Board, Tower), Tower =:= T,
+  selectTower(X, Y, 'Which tower you want to move?', Game, T, Board),
   write('Where do you want to move the tower to?'), nl,
   get_coords(X2, Y2),
   get_tower(X2, Y2, Board, Dest), Dest =:= 0,
@@ -84,7 +76,33 @@ moveTower(_,_,_,_,_,Board,Board) :- write('Couldnt move tower'), nl.
 
 % ------------- Sink tile
 
-sinkTileMenu(Game, Game) :- write('Not implemented yet.'), nl.
+% sinkTileMenu(Game, Game) :- write('Not implemented yet.'), nl.
+sinkTileMenu(Game, NewGame) :-
+  selectTower(X, Y, 'Which tower you want to sink from?', Game, _, Board),
+  write('Which tile you want to sink? (up/down/left/right)'), nl, read(Which),
+  (
+    Which == 'up' -> (XT is X, YT is Y - 1);
+    Which == 'down' -> (XT is X, YT is Y + 1);
+    Which == 'left' -> (XT is X - 1, YT is Y);
+    Which == 'right' -> (XT is X + 1, YT is Y);
+
+    nl,
+    write('Error: Invalid direction'), nl,
+    sinkTileMenu(Game, NewGame)
+  ),
+  get_tower(XT, YT, Board, Tower), Tower =:= 0, % Not occupied
+  checkFreeEdges([XT,YT], Board, N),
+  N < 4,
+  sinkTile(XT, YT, Board, NewBoard),
+  check_if_connected(NewBoard),
+  game_setBoard(Game, NewBoard, G1),
+  game_clearPasses(G1, G2),
+  game_nextTurn(G2, NewGame).
+sinkTileMenu(Game, Game) :- write('Invalid sink'), nl.
+
+sinkTile(X, Y, Board, NewBoard) :-
+  set_tile(X, Y, Board, 0, NewBoard).
+sinkTile(_, _, Board, Board) :- write('Couldnt sink tile'), nl.
 
 % ------------- Move tile
 
@@ -97,6 +115,18 @@ pass(Game, NewGame) :-
   game_checkPasses(G1, NewGame).
 
 % Utils
+
+selectTower(X, Y, Message, Game, Turn, Board) :-
+  game_getTurn(Game, T),
+  (
+    T = 'white' -> Turn = 2;
+    T = 'black' -> Turn = 1
+    ),
+  game_getBoard(Game, Board),
+  write(Message), nl,
+  get_coords(X, Y),
+  get_tower(X, Y, Board, Tower), Tower =:= Turn.
+
 
 getCurrIsland(X, Y, 1, Board, Island) :-
   check_black_island(X, Y, Board, I1),
