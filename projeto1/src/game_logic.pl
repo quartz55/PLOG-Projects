@@ -2,6 +2,11 @@
 
 % Completed islands
 
+completed_island(Board) :- completed_island('white', Board).
+completed_island(Board) :- completed_island('black', Board).
+completed_island(Board) :- completed_island('round', Board).
+completed_island(Board) :- completed_island('square', Board).
+
 completed_island('white', Board) :-
   get_valid_tile(X, Y, Board, [_,1]), !,
   check_white_island(X, Y, Board, Island), !,
@@ -66,7 +71,7 @@ reachable_tiles_rec([CurrTile|T], Visited, Board, Reachable, F) :-
 check_white_island(X, Y, Board, Island) :-
   search_white_island([[X,Y]], [], Board, [], Island).
 
-search_white_island([], _, _, Island, Island) :- write(Island), nl.
+search_white_island([], _, _, Island, Island).
 search_white_island([CurrTile|T], Visited, Board, Island, F) :-
   member(CurrTile, Visited), !,
   search_white_island(T, Visited, Board, Island, F).
@@ -82,7 +87,7 @@ search_white_island([Tile|T], Visited, Board, Island, F) :-
 check_black_island(X, Y, Board, Island) :-
   search_black_island([[X,Y]], [], Board, [], Island).
 
-search_black_island([], _, _, Island, Island) :- write(Island), nl.
+search_black_island([], _, _, Island, Island).
 search_black_island([CurrTile|T], Visited, Board, Island, F) :-
   member(CurrTile, Visited), !,
   search_black_island(T, Visited, Board, Island, F).
@@ -99,7 +104,7 @@ search_black_island([Tile|T], Visited, Board, Island, F) :-
 check_round_island(X, Y, Board, Island) :-
   search_round_island([[X,Y]], [], Board, [], Island).
 
-search_round_island([], _, _, Island, Island) :- write(Island), nl.
+search_round_island([], _, _, Island, Island).
 search_round_island([CurrTile|T], Visited, Board, Island, F) :-
   member(CurrTile, Visited), !,
   search_round_island(T, Visited, Board, Island, F).
@@ -115,7 +120,7 @@ search_round_island([Tile|T], Visited, Board, Island, F) :-
 check_square_island(X, Y, Board, Island) :-
   search_square_island([[X,Y]], [], Board, [], Island).
 
-search_square_island([], _, _, Island, Island) :- write(Island), nl.
+search_square_island([], _, _, Island, Island).
 search_square_island([CurrTile|T], Visited, Board, Island, F) :-
   member(CurrTile, Visited), !,
   search_square_island(T, Visited, Board, Island, F).
