@@ -1,4 +1,5 @@
 :- use_module(library(random)).
+:- use_module(library(sets)).
 :- include('utils.pl').
 :- include('board.pl').
 :- include('game_logic.pl').
@@ -178,8 +179,10 @@ showGameInfo(Game) :-
   game_showBoard(Game),
   game_printPlayers(Game),
   game_getTurn(Game, Turn),
+  calcBoardValue(Game, Value),
   write('--------------------------'), nl,
-  write('It is '), write(Turn), write('\'s turn'), nl,
+  write('| It is '), write(Turn), write('\'s turn'), nl,
+  write('| Board score: '), write(Value), nl,
   write('--------------------------'), nl.
 
 selectTower(X, Y, Message, Game, Turn, Board) :-

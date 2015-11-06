@@ -252,6 +252,24 @@ get_valid_tile_line(X, Y, X1, Y1, [_|T], Tile) :-
   XN is X + 1,
   get_valid_tile_line(XN, Y, X1, Y1, T, Tile).
 
+get_towers(Board, Towers, Tower) :-
+  get_towers(0, Board, [], Towers, Tower).
+
+get_towers(_, [], Final, Final, _).
+get_towers(Y, [H|Xs], Towers, Final, Tower) :-
+  get_towers_aux(0, Y, H, [], Temp, Tower),
+  append(Towers, Temp, NT),
+  Y1 is Y + 1,
+  get_towers(Y1, Xs, NT, Final, Tower).
+
+get_towers_aux(_, _, [], F, F, _).
+get_towers_aux(X, Y, [[Tower,_]|T], Towers, F, Tower) :-
+  X1 is X + 1,
+  get_towers_aux(X1, Y, T, [[X,Y]|Towers], F, Tower).
+get_towers_aux(X, Y, [_|T], Towers, F, Tower) :-
+  X1 is X + 1,
+  get_towers_aux(X1, Y, T, Towers, F, Tower).
+
 get_white_tile(X, Y, Board) :- get_valid_tile(X, Y, Board, [_,1]), X \= -1.
 get_white_tile(X, Y, Board) :- get_valid_tile(X, Y, Board, [_,2]), X \= -1.
 

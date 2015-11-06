@@ -80,7 +80,6 @@ set_tower(X, Y, Board, Tower, NewBoard) :-
 get_tower(X, Y, Board, Tower) :-
   get_matrix_elem(X, Y, Board, [Tower,_]).
 
-
 set_tile(X, Y, Board, Tile, NewBoard) :-
   get_tower(X, Y, Board, Tower),
   set_matrix_elem(X, Y, Board, [Tower,Tile], NewBoard).
