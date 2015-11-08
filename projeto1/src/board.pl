@@ -145,6 +145,9 @@ set_list_elem(Pos, [H|T], Elem, [H|Xs]) :-
   Pos1 is Pos - 1,
   set_list_elem(Pos1, T, Elem, Xs).
 
+list_remove_dups([], []).
+list_remove_dups([H|T], [H|T1]) :- subtract(T, [H], T2), list_remove_dups(T2, T1).
+
 % Board generation
 
 gen_empty_major(Board) :- gen_matrix([0,0], 7, Board).

@@ -27,7 +27,7 @@ calcIslands(Game, 'black', Value) :-
   check_black_island(X1, Y1, B, I1), check_square_island(X1, Y1, B, I2),
   check_black_island(X2, Y2, B, I3), check_square_island(X2, Y2, B, I4),
   append(I1, I2, Temp1), append(I3, I4, Temp2), append(Temp1, Temp2, Temp3),
-  removeDups(Temp3, Final),
+  list_remove_dups(Temp3, Final),
   get_list_size(Final, NTotal),
   number_of_tiles(Board, [_,3], N1), number_of_tiles(Board, [_,4], N2),
   NBlacks is N1+N2,
@@ -38,11 +38,8 @@ calcIslands(Game, 'white', Value) :-
   check_white_island(X1, Y1, B, I1), check_round_island(X1, Y1, B, I2),
   check_white_island(X2, Y2, B, I3), check_round_island(X2, Y2, B, I4),
   append(I1, I2, Temp1), append(I3, I4, Temp2), append(Temp1, Temp2, Temp3),
-  removeDups(Temp3, Final),
+  list_remove_dups(Temp3, Final),
   get_list_size(Final, NTotal),
   number_of_tiles(Board, [_,1], N1), number_of_tiles(Board, [_,2], N2),
   NWhites is N1+N2,
   Value is NTotal - NWhites.
-
-removeDups([], []).
-removeDups([H|T], [H|T1]) :- subtract(T, [H], T2), removeDups(T2, T1).
