@@ -1,4 +1,6 @@
 :- use_module(library(clpfd)).
+:- use_module(library(lists)).
+:- use_module(library(sets)).
 
 %%%%%%%%%%%%%%%
 % Test Boards %
@@ -22,6 +24,15 @@ base_puzzle([
              [0,4,0,2,0,0]
             ]).
 
+% base_puzzle([
+%              [0,0,0,0,0,2],
+%              [0,0,0,0,0,0],
+%              [0,0,0,0,0,0],
+%              [0,0,0,0,0,0],
+%              [0,0,0,0,0,0],
+%              [0,0,0,0,0,0]
+%             ]).
+
 %%% Board: 3x3
 % | |2| |    |1| | |
 % |1| | | -> | | | |
@@ -29,8 +40,8 @@ base_puzzle([
 %%% ----------
 
 easy_puzzle([
-             [0,2,0],
-             [1,0,0],
+             [2,0,0],
+             [0,1,0],
              [0,0,0]
             ]).
 
@@ -49,14 +60,14 @@ test_puzzle([
 %%%%%%%%%
 
 hamle(Sol) :-
-  easy_puzzle(P),
+  base_puzzle(P),
   display_board(P),
   write('----------------'), nl,
 
-  !, solve_puzzle(P, Sol, Pieces, Length)
+  !, solve_puzzle(P, Sol, Pieces, Length),
 
-  ,display_solution_board(Sol, Pieces, Length)
-  .
+  display_solution_board(Sol, Pieces, Length),
+  fd_statistics.
 
 display_solution_board(Sol, Pieces, Length) :-
   length(Aux, Length),
@@ -68,13 +79,9 @@ display_solution_board(Sol, Pieces, Length) :-
 
 put_pieces([], [], Final, Final).
 put_pieces([Pos|T], [[_,Piece]|PT], Aux, Final) :-
-  Pos1 is Pos - 1,
-  replace(Aux, Pos1, Piece, Aux1),
+  replace(Aux, Pos, Piece, Aux1),
   put_pieces(T, PT, Aux1, Final).
 
-replace([_|T], 0, X, [X|T]).
-replace([H|T], I, X, [H|R]):- I > -1, NI is I-1, replace(T, NI, X, R), !.
-replace(L, _, _, L).
 
 %%%%%%%%%%
 % Solver %
@@ -88,64 +95,78 @@ solve_puzzle(Board, Solution, PiecesList, Length) :-
 
   write('Pieces List: '), write(PiecesList), nl,
   format('Num Pieces: ~d\n', NumPieces),
-  format('Domain: [~d - ~d]\n', [1, Length]),
+  format('Domain: [~d - ~d]\n', [0, Length-1]),
 
+  MaxDomain #= Length - 1,
   length(Solution, NumPieces),
-  domain(Solution, 1, Length),
+  domain(Solution, 0, MaxDomain),
   all_different(Solution),
 
   !,
 
   %% 1st restriction
   %%%% Checks all the possible cells a piece can move to based on its number
-  check_piece_moves(Board, PiecesList, Solution),
+  check_piece_moves(Board, PiecesList, Solution, Solution),
 
-  write(Solution), nl,
   %% 2nd restriction
   %%%% Checks if pieces don't have adjacent pieces to them
-  check_piece_adjacency(Board, Solution, Solution),
-  write(Solution), nl,
+  % write(Solution), nl,
+  % check_piece_adjacency(Board, Solution, Solution),
+  % write(Solution), nl,
 
-  %% Make sure pieces position corresponds to movement allowed
-  % check_pieces_moves(Board, Solution),
+  labeling([], Solution).
 
-  % check_interconnection(Solution),
+asd(_, []).
+asd([A,B,C,D], [H|T]) :-
+  H #\= A #/\
+  H #\= B #/\
+  H #\= C #/\
+  H #\= D,
+  asd([A,B,C,D], T).
+asd([A,B,C], [H|T]) :-
+  H #\= A #/\
+  H #\= B #/\
+  H #\= C,
+  asd([A,B,C], T).
+asd([A,B], [H|T]) :-
+  H #\= A #/\
+  H #\= B,
+  asd([A,B], T).
 
-  % check_no_adjacency(Solution),
+aaaa([N,S,E,W], X, Size) :-
+  N #= X - Size #/\
+  S #= X + Size #/\
+  E #= X + 1 #/\ E mod Size #\= 0 #/\
+  W #= X - 1 #/\ W mod Size #< Size - 1.
+aaaa([N,S,E], X, Size) :-
+  N #= X - Size #/\
+  S #= X + Size #/\
+  E #= X + 1 #/\ E mod Size #\= 0.
+aaaa([N,S,W], X, Size) :-
+  N #= X - Size #/\
+  S #= X + Size #/\
+  W #= X - 1 #/\ W mod Size #< Size - 1.
+aaaa([N,S], X, Size) :-
+  N #= X - Size #/\
+  S #= X + Size.
 
-  !, labeling([ff], Solution).
 
-check_piece_adjacency(_, [], _).
-check_piece_adjacency(Board, [Pos|T], Solution) :-
-  get_board_size(Board, Size),
-  Pos1 #= Pos - 1,
-  convert_1d_to_2d(Pos1, Size, Pos2D),
-  get_valid_neighbours(Pos2D, 1, Board, Adjacents),
-  validate_adjacency(Adjacents, Solution),
-  check_piece_adjacency(Board, T, Solution).
-
-validate_adjacency([], _).
-validate_adjacency([Val|T], Solution) :-
-  count(Val, Solution, #=, 0),
-  validate_adjacency(T, Solution).
-
-check_piece_moves(_, [], []).
-check_piece_moves(Board, [Piece|T], [X|XT]) :-
+check_piece_moves(_, [], [], _).
+check_piece_moves(Board, [Piece|T], [X|XT], Sol) :-
   move_piece(Piece, Board, X),
-  check_piece_moves(Board, T, XT).
+  get_board_size(Board, Size), !,
+  aaaa(List, X, Size),
+  convert_1d_to_2d(X, Size, Pos2D),
+  write(Pos2D), write(': '),
+  write(List), nl,
+  asd(List,Sol),
+  check_piece_moves(Board, T, XT, Sol).
 
 move_piece([Pos, Num], Board, Var) :-
+  write(Num), write(' - '),
   get_valid_neighbours(Pos, Num, Board, Neighbours),
-  set_piece_movements(Neighbours, Var).
-
-set_piece_movements([Pos1], Var) :-
-  Var #= Pos1.
-set_piece_movements([Pos1, Pos2], Var) :-
-  Var #= Pos1 #\/ Var #= Pos2.
-set_piece_movements([Pos1, Pos2, Pos3], Var) :-
-  Var #= Pos1 #\/ Var #= Pos2 #\/ Var #= Pos3.
-set_piece_movements([Pos1, Pos2, Pos3, Pos4], Var) :-
-  Var #= Pos1 #\/ Var #= Pos2 #\/ Var #= Pos3 #\/ Var #= Pos4.
+  list_to_fdset(Neighbours, Set),
+  Var in_set Set.
 
 %%%%%%%%%%%%%%%
 % Board utils %
@@ -166,10 +187,10 @@ get_board_pieces_aux(Board, [_,Y], Size, Acc, Final) :-
 
 
 convert_1d_to_2d(Pos, Size, [X,Y]) :-
-  X is Pos mod Size,
-  Y is Pos // Size.
+  X #= Pos mod Size,
+  Y #= Pos // Size.
 convert_2d_to_1d([X,Y], Size, Result) :-
-  Result is (Y * Size) + X.
+  Result #= (Y * Size) + X.
 
 get_valid_neighbours([X,Y], Distance, Board, Valid) :-
   get_board_size(Board, Size),
@@ -185,21 +206,22 @@ trim_invalid_neighbours([_|T], Acc, Valid, Board) :- trim_invalid_neighbours(T, 
 
 convert_to_1d([], _, Valid, Valid).
 convert_to_1d([H|T], Size, Acc, Valid) :-
-  convert_2d_to_1d(H, Size, Temp), Conv #= Temp + 1,
+  convert_2d_to_1d(H, Size, Conv),
   convert_to_1d(T, Size, [Conv|Acc], Valid).
 
-get_neighbours([X,Y], [N,S,E,W], Distance) :-
-  NY is Y - Distance,
-  SY is Y + Distance,
-  EX is X + Distance,
-  WX is X - Distance,
-  N = [X, NY], S = [X, SY], E = [EX, Y], W = [WX, Y].
+get_neighbours([X,Y], [[X,NY],[X,SY],[EX,Y],[WX,Y]], Distance) :-
+  NY #= Y - Distance,
+  SY #= Y + Distance,
+  EX #= X + Distance,
+  WX #= X - Distance.
 
 %%% Board must be square
-get_board_size([Line|XT], Size) :-
-  length(Line, Width), length([Line|XT], Height),
-  Width = Height, Size = Width.
-get_board_size(_,_) :- write('Board is not a square'), !, fail.
+% get_board_size([Line|XT], Size) :-
+%   length(Line, Width), length([Line|XT], Height),
+%   Width = Height, Size = Width.
+get_board_size(Board, Size) :-
+  length(Board, Size).
+% get_board_size(Board,_) :- display_board(Board), nl, write('Board is not a square'), nl, !, fail.
 
 
 %%% Display functions
@@ -218,7 +240,7 @@ display_element(T) :- write(T).
 
 
 %%%%%%%%%
-                                % Utils %
+% Utils %
 %%%%%%%%%
 
 %%% List->Matrix / Matrix->List converters
@@ -252,10 +274,15 @@ get_matrix_elem([X,Y], Matrix, Elem) :-
 
 get_list_elem([Elem|_], 0, Elem).
 get_list_elem([_|T], N, Elem) :-
-  N > 0, N1 is N - 1,
+  N #> 0, N1 #= N - 1,
   get_list_elem(T, N1, Elem).
 
 %%% Others
+
+replace([_|T], 0, X, [X|T]).
+replace([H|T], I, X, [H|R]):- I > -1, NI is I-1, replace(T, NI, X, R), !.
+replace(L, _, _, L).
+
 exactly(_,[],0).
 exactly(X,[Y|T],N) :-
   X #= Y #<=> B,
