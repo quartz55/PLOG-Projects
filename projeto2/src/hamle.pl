@@ -40,7 +40,7 @@ base_puzzle([
 %%% ----------
 
 easy_puzzle([
-             [2,0,0],
+             [2,0,2],
              [0,1,0],
              [0,0,0]
             ]).
@@ -108,45 +108,39 @@ solve_puzzle(Board, Solution, PiecesList, Length) :-
   %%%% Checks all the possible cells a piece can move to based on its number
   check_piece_moves(Board, PiecesList, Solution, Solution),
 
-  %% 2nd restriction
-  %%%% Checks if pieces don't have adjacent pieces to them
-  % write(Solution), nl,
-  % check_piece_adjacency(Board, Solution, Solution),
-  % write(Solution), nl,
+  labeling([ff], Solution).
 
-  labeling([], Solution).
-
-asd(_, []).
-asd([A,B,C,D], [H|T]) :-
+set_adjacent_restriction(_, []).
+set_adjacent_restriction([A,B,C,D], [H|T]) :-
   H #\= A #/\
   H #\= B #/\
   H #\= C #/\
   H #\= D,
-  asd([A,B,C,D], T).
-asd([A,B,C], [H|T]) :-
+  set_adjacent_restriction([A,B,C,D], T).
+set_adjacent_restriction([A,B,C], [H|T]) :-
   H #\= A #/\
   H #\= B #/\
   H #\= C,
-  asd([A,B,C], T).
-asd([A,B], [H|T]) :-
+  set_adjacent_restriction([A,B,C], T).
+set_adjacent_restriction([A,B], [H|T]) :-
   H #\= A #/\
   H #\= B,
-  asd([A,B], T).
+  set_adjacent_restriction([A,B], T).
 
-aaaa([N,S,E,W], X, Size) :-
+get_adjacent([N,S,E,W], X, Size) :-
   N #= X - Size #/\
   S #= X + Size #/\
   E #= X + 1 #/\ E mod Size #\= 0 #/\
   W #= X - 1 #/\ W mod Size #< Size - 1.
-aaaa([N,S,E], X, Size) :-
+get_adjacent([N,S,E], X, Size) :-
   N #= X - Size #/\
   S #= X + Size #/\
   E #= X + 1 #/\ E mod Size #\= 0.
-aaaa([N,S,W], X, Size) :-
+get_adjacent([N,S,W], X, Size) :-
   N #= X - Size #/\
   S #= X + Size #/\
   W #= X - 1 #/\ W mod Size #< Size - 1.
-aaaa([N,S], X, Size) :-
+get_adjacent([N,S], X, Size) :-
   N #= X - Size #/\
   S #= X + Size.
 
@@ -154,17 +148,22 @@ aaaa([N,S], X, Size) :-
 check_piece_moves(_, [], [], _).
 check_piece_moves(Board, [Piece|T], [X|XT], Sol) :-
   move_piece(Piece, Board, X),
-  get_board_size(Board, Size), !,
-  aaaa(List, X, Size),
+  get_board_size(Board, Size),
+  get_adjacent(List, X, Size),
   convert_1d_to_2d(X, Size, Pos2D),
-  write(Pos2D), write(': '),
-  write(List), nl,
-  asd(List,Sol),
+  % write('----- Adjacents -----'), nl,
+  % write(Pos2D), write(': '),
+  % write(List), nl,
+  % write(L), nl,
+  % write('---------------------'), nl,
+  set_adjacent_restriction(List,Sol),
   check_piece_moves(Board, T, XT, Sol).
 
 move_piece([Pos, Num], Board, Var) :-
-  write(Num), write(' - '),
   get_valid_neighbours(Pos, Num, Board, Neighbours),
+  % write('----- Movement -----'), nl,
+  % write(Num), write(' | '), write(Neighbours), nl,
+  % write('--------------------'), nl,
   list_to_fdset(Neighbours, Set),
   Var in_set Set.
 
