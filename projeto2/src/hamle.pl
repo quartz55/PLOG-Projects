@@ -1,6 +1,7 @@
 :- use_module(library(clpfd)).
 :- use_module(library(lists)).
 :- use_module(library(sets)).
+:- use_module(library(random)).
 
 %%%%%%%%%%%%%%%
 % Test Boards %
@@ -59,6 +60,16 @@ hamle(Sol) :-
 
   display_solution_board(Sol, Pieces, Length),
   fd_statistics.
+
+hamle_random(Size, Sol) :-
+  generate_random_board(Size, B),
+  write('Generating'), nl,
+  solve_puzzle(B, Sol, Pieces, Length),
+  display_board(B),
+  write('----------------'), nl,
+  display_solution_board(Sol, Pieces, Length),
+  fd_statistics.
+hamle_random(Size, Sol) :- hamle_random(Size, Sol).
 
 display_solution_board(Sol, Pieces, Length) :-
   length(Aux, Length),
@@ -204,6 +215,26 @@ get_neighbours([X,Y], [[X,NY],[X,SY],[EX,Y],[WX,Y]], Distance) :-
 
 get_board_size(Board, Size) :-
   length(Board, Size).
+
+generate_random_board(Size, Board) :-
+  generate_random_board(Size, Size, [], Board).
+
+generate_random_board(0, _, Board, Board) :- !.
+generate_random_board(N, Size, Acc, Board) :-
+  N1 is N - 1,
+  generate_random_line(Size, Line),
+  append(Acc, [Line], Acc1),
+  generate_random_board(N1, Size, Acc1, Board).
+
+generate_random_line(Size, Line) :-
+  generate_random_line(Size, Size, [], Line).
+
+generate_random_line(0, _, Line, Line) :- !.
+generate_random_line(N, Size, Acc, Line) :-
+  N1 is N - 1,
+  random(0, Size, Rand),
+  append(Acc, [Rand], Acc1),
+  generate_random_line(N1, Size, Acc1, Line).
 
 %%% Display functions
 display_board([]).
