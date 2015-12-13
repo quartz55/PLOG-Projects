@@ -24,19 +24,10 @@ base_puzzle([
              [0,4,0,2,0,0]
             ]).
 
-% base_puzzle([
-%              [0,0,0,0,0,2],
-%              [0,0,0,0,0,0],
-%              [0,0,0,0,0,0],
-%              [0,0,0,0,0,0],
-%              [0,0,0,0,0,0],
-%              [0,0,0,0,0,0]
-%             ]).
-
 %%% Board: 3x3
-% | |2| |    |1| | |
-% |1| | | -> | | | |
-% | | | |    | |2| |
+% |2| |2|    |2| | |
+% | |1| | -> | | |1|
+% | | | |    |2| | |
 %%% ----------
 
 easy_puzzle([
@@ -93,10 +84,6 @@ solve_puzzle(Board, Solution, PiecesList, Length) :-
   get_board_pieces(Board, PiecesList),
   length(PiecesList, NumPieces),
 
-  write('Pieces List: '), write(PiecesList), nl,
-  format('Num Pieces: ~d\n', NumPieces),
-  format('Domain: [~d - ~d]\n', [0, Length-1]),
-
   MaxDomain #= Length - 1,
   length(Solution, NumPieces),
   domain(Solution, 0, MaxDomain),
@@ -104,9 +91,10 @@ solve_puzzle(Board, Solution, PiecesList, Length) :-
 
   !,
 
-  %% 1st restriction
-  %%%% Checks all the possible cells a piece can move to based on its number
-  check_piece_moves(Board, PiecesList, Solution, Solution),
+  move_pieces_and_check_adjacency(Board, PiecesList, Solution, Solution),
+
+  %% Need to check white piece connection
+  %% ...
 
   labeling([ff], Solution).
 
@@ -145,19 +133,19 @@ get_adjacent([N,S], X, Size) :-
   S #= X + Size.
 
 
-check_piece_moves(_, [], [], _).
-check_piece_moves(Board, [Piece|T], [X|XT], Sol) :-
+move_pieces_and_check_adjacency(_, [], [], _).
+move_pieces_and_check_adjacency(Board, [Piece|T], [X|XT], Sol) :-
   move_piece(Piece, Board, X),
   get_board_size(Board, Size),
   get_adjacent(List, X, Size),
-  convert_1d_to_2d(X, Size, Pos2D),
+  % convert_1d_to_2d(X, Size, Pos2D),
   % write('----- Adjacents -----'), nl,
   % write(Pos2D), write(': '),
   % write(List), nl,
   % write(L), nl,
   % write('---------------------'), nl,
   set_adjacent_restriction(List,Sol),
-  check_piece_moves(Board, T, XT, Sol).
+  move_pieces_and_check_adjacency(Board, T, XT, Sol).
 
 move_piece([Pos, Num], Board, Var) :-
   get_valid_neighbours(Pos, Num, Board, Neighbours),
@@ -209,19 +197,13 @@ convert_to_1d([H|T], Size, Acc, Valid) :-
   convert_to_1d(T, Size, [Conv|Acc], Valid).
 
 get_neighbours([X,Y], [[X,NY],[X,SY],[EX,Y],[WX,Y]], Distance) :-
-  NY #= Y - Distance,
-  SY #= Y + Distance,
-  EX #= X + Distance,
-  WX #= X - Distance.
+  NY is Y - Distance,
+  SY is Y + Distance,
+  EX is X + Distance,
+  WX is X - Distance.
 
-%%% Board must be square
-% get_board_size([Line|XT], Size) :-
-%   length(Line, Width), length([Line|XT], Height),
-%   Width = Height, Size = Width.
 get_board_size(Board, Size) :-
   length(Board, Size).
-% get_board_size(Board,_) :- display_board(Board), nl, write('Board is not a square'), nl, !, fail.
-
 
 %%% Display functions
 display_board([]).
@@ -273,7 +255,7 @@ get_matrix_elem([X,Y], Matrix, Elem) :-
 
 get_list_elem([Elem|_], 0, Elem).
 get_list_elem([_|T], N, Elem) :-
-  N #> 0, N1 #= N - 1,
+  N > 0, N1 is N - 1,
   get_list_elem(T, N1, Elem).
 
 %%% Others
