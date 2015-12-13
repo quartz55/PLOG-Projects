@@ -62,14 +62,14 @@ hamle(Sol) :-
   fd_statistics.
 
 hamle_random(Size, Sol) :-
+  write('Generating random board'), nl,
   generate_random_board(Size, B),
-  write('Generating'), nl,
   solve_puzzle(B, Sol, Pieces, Length),
   display_board(B),
   write('----------------'), nl,
   display_solution_board(Sol, Pieces, Length),
   fd_statistics.
-hamle_random(Size, Sol) :- hamle_random(Size, Sol).
+hamle_random(Size, Sol) :- write('Invalid board'), nl, hamle_random(Size, Sol).
 
 display_solution_board(Sol, Pieces, Length) :-
   length(Aux, Length),
@@ -217,24 +217,33 @@ get_board_size(Board, Size) :-
   length(Board, Size).
 
 generate_random_board(Size, Board) :-
-  generate_random_board(Size, Size, [], Board).
+  MaxPieces is floor((Size*Size) / 2) - 1,
+  generate_random_board(Size, Size, MaxPieces, [], Board).
 
-generate_random_board(0, _, Board, Board) :- !.
-generate_random_board(N, Size, Acc, Board) :-
+generate_random_board(0, _, _, Board, Board) :- !.
+generate_random_board(N, Size, Max, Acc, Board) :-
   N1 is N - 1,
-  generate_random_line(Size, Line),
+  generate_random_line(Size, Max, NewMax, Line),
   append(Acc, [Line], Acc1),
-  generate_random_board(N1, Size, Acc1, Board).
+  generate_random_board(N1, Size, NewMax, Acc1, Board).
 
-generate_random_line(Size, Line) :-
-  generate_random_line(Size, Size, [], Line).
+generate_random_line(Size, Max, NewMax, Line) :-
+  generate_random_line(Size, Size, Max, NewMax, [], Line).
 
-generate_random_line(0, _, Line, Line) :- !.
-generate_random_line(N, Size, Acc, Line) :-
+generate_random_line(0, _, NewMax, NewMax, Line, Line) :- !.
+generate_random_line(N, Size, 0, NewMax, Acc, Line) :-
+  N1 is N - 1,
+  append(Acc, [0], Acc1),
+  generate_random_line(N1, Size, 0, NewMax, Acc1, Line).
+generate_random_line(N, Size, Max, NewMax, Acc, Line) :-
   N1 is N - 1,
   random(0, Size, Rand),
+  (
+    Rand \= 0 -> NM is Max - 1;
+    NM is Max
+  ),
   append(Acc, [Rand], Acc1),
-  generate_random_line(N1, Size, Acc1, Line).
+  generate_random_line(N1, Size, NM, NewMax, Acc1, Line).
 
 %%% Display functions
 display_board([]).
